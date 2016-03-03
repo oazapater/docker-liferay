@@ -18,7 +18,7 @@ docker run --name lep-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_USER=
 #     -p 3306:3306
 
 # Run liferay:
-docker run --name lep-as -p 80:8080 -p 443:8443 --link lep-db -d docker-liferay
+docker run --name lep-as -p 80:8080 -p 443:8443 --link lep-db -d oazapater/docker-liferay
 # To enable development mode add options (includes SSH daemon + JMX monitoring + dt_socket debugging) add options:
 #     -e LIFERAY_DEBUG=1 -p 2222:22 -p 1099:1099 -p 8999:8999
 # If docker daemon does not run on localhost (e.g.: VirtualBox), JMX monitoring needs option: 
