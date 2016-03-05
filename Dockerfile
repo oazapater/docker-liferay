@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM java:7
 
 MAINTAINER Oscar Zapater <oscar.zapater@gmail.com>
 
@@ -7,17 +7,6 @@ RUN apt-get update && \
 	apt-get install -y curl unzip ssh vim net-tools git && \
 	apt-get clean
 	
-# Export TERM as "xterm"
-RUN echo -e "\nexport TERM=xterm" >> ~/.bashrc
-	
-# Install Java 8 JDK 
-RUN apt-get update && \
-    apt-get install -y openjdk-8-jdk && \
-	apt-get clean
-ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-ENV JRE_HOME=$JAVA_HOME/jre 
-ENV PATH=$PATH:$JAVA_HOME/bin
-
 # Install liferay (removing sample application "welcome-theme")
 ENV LIFERAY_BASE=/opt
 ENV LIFERAY_VER=liferay-portal-6.2-ce-ga6
