@@ -1,37 +1,49 @@
-FROM debian:wheezy
+FROM java:7
 
 MAINTAINER Oscar Zapater <oscar.zapater@gmail.com>
 
-# install java
-RUN apt-get update \
-	&& apt-get install -y curl tar unzip \
-	&& (curl -s -k -L -C - -b "oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.tar.gz | tar xfz - -C /opt) \
-	&& mv /opt/jdk1.7.0_79/jre /opt/jre1.7.0_79 \
-	&& mv /opt/jdk1.7.0_79/lib/tools.jar /opt/jre1.7.0_79/lib/ext \
-	&& rm -Rf /opt/jdk1.7.0_79 \
-	&& ln -s /opt/jre1.7.0_79 /opt/java
+# Install packages
+RUN apt-get update && \
+	apt-get install -y curl unzip ssh vim net-tools git && \
+	apt-get clean
+	
+# Install liferay (removing sample application "welcome-theme")
+ENV LIFERAY_BASE=/opt
+ENV LIFERAY_VER=liferay-portal-6.2-ce-ga6
+ENV LIFERAY_HOME=${LIFERAY_BASE}/${LIFERAY_VER} 
+ENV TOMCAT_VER=tomcat-7.0.62 
+ENV TOMCAT_HOME=${LIFERAY_HOME}/${TOMCAT_VER} 
+RUN cd /tmp && \
+	curl -o ${LIFERAY_VER}.zip -k -L -C - \
+	"http://sourceforge.net/projects/lportal/files/Liferay%20Portal/6.2.5%20GA6/liferay-portal-tomcat-6.2-ce-ga6-20160112152609836.zip" && \
+	unzip ${LIFERAY_VER}.zip -d /opt && \
+	rm ${LIFERAY_VER}.zip && \
+	rm -fr ${TOMCAT_HOME}/webapps/welcome-theme && \
+	mkdir -p ${LIFERAY_HOME}/deploy && \
+	mkdir -p ${LIFERAY_BASE}/script
 
-# install liferay
-RUN curl -O -s -k -L -C - http://downloads.sourceforge.net/project/lportal/Liferay%20Portal/6.2.5%20GA6/liferay-portal-tomcat-6.2-ce-ga6-20160112152609836.zip \
-	&& unzip liferay-portal-tomcat-6.2-ce-ga6-20160112152609836.zip -d /opt \
-	&& rm liferay-portal-tomcat-6.2-ce-ga6-20160112152609836.zip
+# Add symlinks to HOME dirs
+RUN ln -fs ${LIFERAY_HOME} /var/liferay && \
+	ln -fs ${TOMCAT_HOME} /var/tomcat
+	
+# Add configuration files to tomcat conf
+ADD tomcat-conf/* ${TOMCAT_HOME}/conf/
+	
+# Add configuration files to liferay home
+ADD conf-properties/* ${LIFERAY_HOME}/
 
-# add config for bdd
-RUN /bin/echo -e '\nCATALINA_OPTS="$CATALINA_OPTS -Dexternal-properties="' >> /opt/liferay-portal-6.2-ce-ga6/tomcat-7.0.62/bin/setenv.sh
+# Add default plugins to auto-deploy directory
+ADD deploy/* ${LIFERAY_HOME}/deploy/
 
-# add configuration liferay file
-#ADD properties/portal-ext.properties /opt/liferay-portal-6.2-ce-ga6/portal-ext.properties
-ADD properties/portal-bundle.properties /opt/liferay-portal-6.2-ce-ga6/portal-bundle.properties
+# Add configuration cache custom
+ADD custom_cache/* ${TOMCAT_HOME}/webapps/ROOT/WEB-INF/classes/
 
-# volumes
-VOLUME ["/var/liferay-home", "/opt/liferay-portal-6.2-ce-ga6/"]
+# Add startup scripts
+ADD script/* ${LIFERAY_BASE}/script/
+RUN chmod +x ${LIFERAY_BASE}/script/*.sh
 
 # Ports
-EXPOSE 8080
-
-# Set JAVA_HOME
-ENV JAVA_HOME /opt/java
+EXPOSE 8080 8443
 
 # EXEC
-CMD ["run"]
-ENTRYPOINT ["/opt/liferay-portal-6.2-ce-ga6/tomcat-7.0.62/bin/catalina.sh"]
+CMD ["/opt/script/start.sh"]
