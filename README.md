@@ -13,7 +13,7 @@ docker pull oazapater/docker-liferay
 
 ```
 # Run mysql:
-docker run --name lep-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_USER=liferay -e MYSQL_PASSWORD=liferay -e MYSQL_DATABASE=lportal $@ -d mysql:latest
+docker run --name lep-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_USER=liferay -e MYSQL_PASSWORD=liferay -e MYSQL_DATABASE=lportal -d mysql:latest
 # To enable remote connection add option:
 #     -p 3306:3306
 
